@@ -45,7 +45,7 @@ public class TestPipelineService {
 
 
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 1000)
     public void pollTask() {
         logger.info("从数据库中取出任务-定时任务，当前时间是"+ LocalDateTime.now());
         
@@ -56,10 +56,14 @@ public class TestPipelineService {
             logger.info("成功获取到{}个任务", tasks.size());
             
             for(TestTask task : tasks) {
+                // 无论Phase是什么，只要任务Status都是Pending 那都开始流转状态 任务Status为Pending意味着用户刚刚上传这个任务
                 if (task.getTaskStatus() == TaskStatus.PENDING) {
                     stateMachine.transition(task, ExecutionPhase.COMPILE);
                     taskMapper.updateTask(task);
                 } else if(task.getTaskStatus() == TaskStatus.RUNNING) {
+                    // 任务Status为Running，就代表这个Task已经被上面的If启动了 现在需要开始Phase之间的流转
+                    // 我们只允许当前Phase的Status为SUCEESS的Task继续往后流转
+                    // 如果当前Phase不成功就留在原地
                     if (task.getPhaseStatus() == PhaseStatus.SUCCESS) {
                         ExecutionPhase nextPhase = getNextPhase(task.getCurrentPhase());
                         if (nextPhase != null) {
