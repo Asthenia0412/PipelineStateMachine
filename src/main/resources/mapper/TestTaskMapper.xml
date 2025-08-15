@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.asthenia0412.pipelinestatemachine.mapper.TestTaskMapper">
+
+    <resultMap id="testTaskResultMap" type="io.github.asthenia0412.pipelinestatemachine.model.task.TestTask">
+        <id property="taskId" column="task_id"/>
+        <result property="testCaseId" column="test_case_id"/>
+        <result property="executionMode" column="execution_mode"/>
+        <result property="taskStatus" column="task_status"/>
+        <result property="currentPhase" column="current_phase"/>
+        <result property="phaseStatus" column="phase_status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insertTask" parameterType="io.github.asthenia0412.pipelinestatemachine.model.task.TestTask">
+        INSERT INTO test_task (
+            task_id,
+            test_case_id,
+            execution_mode,
+            task_status,
+            current_phase,
+            phase_status
+        ) VALUES (
+                     #{taskId},
+                     #{testCaseId},
+                     #{executionMode},
+                     #{taskStatus},
+                     #{currentPhase},
+                     #{phaseStatus}
+                 )
+    </insert>
+
+    <update id="updateTask" parameterType="io.github.asthenia0412.pipelinestatemachine.model.task.TestTask">
+        UPDATE test_task
+        SET
+            test_case_id = #{testCaseId},
+            execution_mode = #{executionMode},
+            task_status = #{taskStatus},
+            current_phase = #{currentPhase},
+            phase_status = #{phaseStatus}
+        WHERE task_id = #{taskId}
+    </update>
+
+    <select id="findByTaskId" resultMap="testTaskResultMap">
+        SELECT * FROM test_task WHERE task_id = #{taskId}
+    </select>
+
+    <select id="findByStatus" resultMap="testTaskResultMap">
+        SELECT * FROM test_task
+        <where>
+            <if test="status != null and status != ''">
+                task_status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at ASC
+        LIMIT 100
+    </select>
+
+    <delete id="deleteByTaskId">
+        DELETE FROM test_task WHERE task_id = #{taskId}
+    </delete>
+
+    <insert id="batchInsertTasks" parameterType="java.util.List">
+        INSERT INTO test_task (
+        task_id,
+        test_case_id,
+        execution_mode,
+        task_status,
+        current_phase,
+        phase_status
+        ) VALUES
+        <foreach collection="list" item="task" separator=",">
+            (
+            #{task.taskId},
+            #{task.testCaseId},
+            #{task.executionMode},
+            #{task.taskStatus},
+            #{task.currentPhase},
+            #{task.phaseStatus}
+            )
+        </foreach>
+    </insert>
+</mapper>
